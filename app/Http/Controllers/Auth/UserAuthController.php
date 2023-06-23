@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Models\User;
-use App\Jobs\SendEmailJob;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Mail\UserRegistration;
 use Illuminate\Support\Carbon;
+use App\Mail\SendPasswordResetLink;
 use App\Http\Controllers\Controller;
-use App\Jobs\SendPasswordResetEmail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class UserAuthController extends Controller
 {
@@ -47,7 +48,7 @@ class UserAuthController extends Controller
             'email' => $user->email,
             'password' => $password,
         ];
-        SendEmailJob::dispatch($emailData);
+        Mail::to($emailData['email'])->send(new UserRegistration($emailData));
 
         return redirect('verify-account');
     }
@@ -65,7 +66,7 @@ class UserAuthController extends Controller
         ]);
 
         $user = User::where('email', $request->email)->first();
-        dispatch(new SendPasswordResetEmail($user));
+        Mail::to($request->email)->send(new SendPasswordResetLink($user));
 
 
         return view('auth/verify-email');
